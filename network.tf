@@ -7,7 +7,7 @@ resource "aws_security_group" "db_access" {
 
 resource "aws_security_group" "rds" {
   name        = "hf-ml-platform-rds"
-  description = "RDS Postgres — allows inbound 5432 from db-access group"
+  description = "RDS Postgres - allows inbound 5432 from db-access group"
   vpc_id      = data.aws_cloudformation_export.vpc_id.value
   tags        = merge(var.tags, { Name = "hf-ml-platform-rds" })
 }

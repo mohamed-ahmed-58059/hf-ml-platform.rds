@@ -38,6 +38,9 @@ jobs:
       - name: Install Lambda dependencies
         run: pip install -r lambda/requirements.txt -t lambda/
 
+      - name: Verify Lambda package contents
+        run: ls lambda/
+
       - name: Terraform init
         run: terraform init
 

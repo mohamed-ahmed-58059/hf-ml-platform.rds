@@ -98,6 +98,7 @@ resource "aws_lambda_invocation" "init_db" {
   input         = "{}"
 
   triggers = {
-    schema_hash = filemd5("${local.lambda_src}/init.sql")
+    schema_hash   = filemd5("${local.lambda_src}/init.sql")
+    function_hash = aws_lambda_function.init_db.source_code_hash
   }
 }

@@ -86,7 +86,7 @@ resource "aws_lambda_function" "init_db" {
   tags             = var.tags
 
   vpc_config {
-    subnet_ids         = [
+    subnet_ids = [
       data.aws_cloudformation_export.private_subnet_1.value,
       data.aws_cloudformation_export.private_subnet_2.value,
     ]

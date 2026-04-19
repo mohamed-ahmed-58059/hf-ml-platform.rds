@@ -35,6 +35,9 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Lambda dependencies
+        run: pip install -r lambda/requirements.txt -t lambda/
+
       - name: Terraform init
         run: terraform init
 

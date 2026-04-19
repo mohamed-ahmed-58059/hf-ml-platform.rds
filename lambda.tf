@@ -5,22 +5,10 @@ locals {
 
 # ── package ───────────────────────────────────────────────────────────────────
 
-resource "null_resource" "lambda_deps" {
-  triggers = {
-    requirements = filemd5("${local.lambda_src}/requirements.txt")
-    handler      = filemd5("${local.lambda_src}/init_db.py")
-  }
-
-  provisioner "local-exec" {
-    command = "pip install -r ${local.lambda_src}/requirements.txt -t ${local.lambda_src} --quiet"
-  }
-}
-
 data "archive_file" "lambda" {
   type        = "zip"
   source_dir  = local.lambda_src
   output_path = local.lambda_zip
-  depends_on  = [null_resource.lambda_deps]
 }
 
 # ── IAM role ──────────────────────────────────────────────────────────────────

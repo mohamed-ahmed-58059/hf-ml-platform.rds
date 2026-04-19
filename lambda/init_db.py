@@ -18,7 +18,6 @@ def handler(event, context):
         database = db_name,
         user     = secret["username"],
         password = secret["password"],
-        ssl_context = True,
     )
 
     with open(sql_path) as f:

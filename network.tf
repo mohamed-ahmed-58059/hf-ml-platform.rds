@@ -12,6 +12,13 @@ resource "aws_security_group" "rds" {
   tags        = merge(var.tags, { Name = "hf-ml-platform-rds" })
 }
 
+resource "aws_vpc_security_group_egress_rule" "db_access_egress" {
+  security_group_id = aws_security_group.db_access.id
+  ip_protocol       = "-1"
+  cidr_ipv4         = "0.0.0.0/0"
+  tags              = var.tags
+}
+
 resource "aws_vpc_security_group_ingress_rule" "rds_from_db_access" {
   security_group_id            = aws_security_group.rds.id
   referenced_security_group_id = aws_security_group.db_access.id

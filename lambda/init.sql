@@ -1,5 +1,5 @@
 -- Tiers
-CREATE TABLE tiers (
+CREATE TABLE IF NOT EXISTS tiers (
     id               UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     name             VARCHAR(20)    NOT NULL UNIQUE,
     capacity         INTEGER        NOT NULL,
@@ -15,14 +15,15 @@ INSERT INTO tiers (id, name, capacity, refill_per_sec, requests_per_min, version
     ('c0000000-0000-0000-0000-000000000004', 'internal-low',       300,   4.1667,  250,   1),
     ('c0000000-0000-0000-0000-000000000005', 'internal-standard',  1200,  16.6667, 1000,  1),
     ('c0000000-0000-0000-0000-000000000006', 'internal-high',      6000,  83.3333, 5000,  1),
-    ('c0000000-0000-0000-0000-000000000007', 'internal-unlimited', 99999, 9999.0,  99999, 1);
+    ('c0000000-0000-0000-0000-000000000007', 'internal-unlimited', 99999, 9999.0,  99999, 1)
+ON CONFLICT DO NOTHING;
 
 
 -- Routes
 -- Single source of truth for registered endpoints.
 -- tier_endpoints.endpoint is a FK to routes.path — you cannot define a rate limit
 -- policy for an endpoint that does not exist as a route.
-CREATE TABLE routes (
+CREATE TABLE IF NOT EXISTS routes (
     id         UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     path       VARCHAR(255) NOT NULL UNIQUE,
     upstream   VARCHAR(255) NOT NULL,
@@ -33,13 +34,14 @@ CREATE TABLE routes (
 INSERT INTO routes (id, path, upstream, active) VALUES
     ('e0000000-0000-0000-0000-000000000001', '/v1/infer',      'http://stub:4000', true),
     ('e0000000-0000-0000-0000-000000000002', '/v1/models',     'http://stub:4000', true),
-    ('e0000000-0000-0000-0000-000000000003', '/v1/downstream', 'http://stub:4000', true);
+    ('e0000000-0000-0000-0000-000000000003', '/v1/downstream', 'http://stub:4000', true)
+ON CONFLICT DO NOTHING;
 
 
 -- Tier Endpoints
 -- Per-endpoint rate limit overrides per tier.
 -- Falls back to global tier limits (tiers.capacity / tiers.refill_per_sec) when no row exists.
-CREATE TABLE tier_endpoints (
+CREATE TABLE IF NOT EXISTS tier_endpoints (
     id             UUID           PRIMARY KEY DEFAULT gen_random_uuid(),
     tier_id        UUID           NOT NULL REFERENCES tiers(id),
     endpoint       VARCHAR(255)   NOT NULL REFERENCES routes(path),
@@ -72,11 +74,12 @@ INSERT INTO tier_endpoints (tier_id, endpoint, capacity, refill_per_sec) VALUES
     ('c0000000-0000-0000-0000-000000000004', '/v1/downstream',  100,   1.6667),
     ('c0000000-0000-0000-0000-000000000005', '/v1/downstream',  400,   6.6667),
     ('c0000000-0000-0000-0000-000000000006', '/v1/downstream',  2000,  33.3333),
-    ('c0000000-0000-0000-0000-000000000007', '/v1/downstream',  99999, 9999.0);
+    ('c0000000-0000-0000-0000-000000000007', '/v1/downstream',  99999, 9999.0)
+ON CONFLICT DO NOTHING;
 
 
 -- Users
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
     id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     email         VARCHAR(255) NOT NULL UNIQUE,
     password_hash VARCHAR(255) NOT NULL,
@@ -89,11 +92,12 @@ INSERT INTO users (id, email, password_hash, default_tier, created_at) VALUES
     ('a0000000-0000-0000-0000-000000000001', 'alice@example.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpR0JRY1yCn7Ky', 'c0000000-0000-0000-0000-000000000003', now()),
     ('a0000000-0000-0000-0000-000000000002', 'bob@example.com',   '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpR0JRY1yCn7Ky', 'c0000000-0000-0000-0000-000000000002', now()),
     ('a0000000-0000-0000-0000-000000000003', 'carol@example.com', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpR0JRY1yCn7Ky', 'c0000000-0000-0000-0000-000000000001', now()),
-    ('a0000000-0000-0000-0000-000000000004', 'dave@example.com',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpR0JRY1yCn7Ky', 'c0000000-0000-0000-0000-000000000002', now());
+    ('a0000000-0000-0000-0000-000000000004', 'dave@example.com',  '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/LewYpR0JRY1yCn7Ky', 'c0000000-0000-0000-0000-000000000002', now())
+ON CONFLICT DO NOTHING;
 
 
 -- Sessions
-CREATE TABLE sessions (
+CREATE TABLE IF NOT EXISTS sessions (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     created_at    TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -105,13 +109,13 @@ CREATE TABLE sessions (
     user_agent    TEXT
 );
 
-CREATE INDEX idx_sessions_user_active
+CREATE INDEX IF NOT EXISTS idx_sessions_user_active
     ON sessions(user_id, last_seen_at ASC)
     WHERE revoked_at IS NULL;
 
 
 -- Refresh Tokens
-CREATE TABLE refresh_tokens (
+CREATE TABLE IF NOT EXISTS refresh_tokens (
     id            UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     session_id    UUID        NOT NULL REFERENCES sessions(id) ON DELETE CASCADE,
     user_id       UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -125,17 +129,17 @@ CREATE TABLE refresh_tokens (
     revoke_reason TEXT
 );
 
-CREATE INDEX idx_refresh_tokens_session
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_session
     ON refresh_tokens(session_id)
     WHERE revoked_at IS NULL;
 
-CREATE INDEX idx_refresh_tokens_user
+CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user
     ON refresh_tokens(user_id)
     WHERE revoked_at IS NULL;
 
 
 -- Service Clients
-CREATE TABLE service_clients (
+CREATE TABLE IF NOT EXISTS service_clients (
     id                 UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     client_id          VARCHAR(255) NOT NULL UNIQUE,
     client_secret_hash VARCHAR(255) NOT NULL,
@@ -145,9 +149,30 @@ CREATE TABLE service_clients (
     revoked_at         TIMESTAMPTZ
 );
 
+INSERT INTO service_clients (id, client_id, client_secret_hash, name, tier, created_at, revoked_at) VALUES
+    (
+        'd0000000-0000-0000-0000-000000000001',
+        'inference-service',
+        'placeholder-hash',
+        'ML Inference Service',
+        'c0000000-0000-0000-0000-000000000005',
+        now(),
+        NULL
+    ),
+    (
+        'd0000000-0000-0000-0000-000000000002',
+        'revoked-service',
+        'placeholder-hash',
+        'Revoked Service',
+        'c0000000-0000-0000-0000-000000000005',
+        now(),
+        now()
+    )
+ON CONFLICT DO NOTHING;
+
 
 -- API Keys
-CREATE TABLE api_keys (
+CREATE TABLE IF NOT EXISTS api_keys (
     id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id    UUID        NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     key_hash   BYTEA       NOT NULL UNIQUE,
@@ -205,27 +230,5 @@ INSERT INTO api_keys (id, user_id, key_hash, tier, name, status, created_at, rev
         'revoked',
         now(),
         now()
-    );
-
--- Test service clients
--- inference-service: active, internal-standard tier
--- revoked-service:   revoked, internal-standard tier
-INSERT INTO service_clients (id, client_id, client_secret_hash, name, tier, created_at, revoked_at) VALUES
-    (
-        'd0000000-0000-0000-0000-000000000001',
-        'inference-service',
-        'placeholder-hash',
-        'ML Inference Service',
-        'c0000000-0000-0000-0000-000000000005',
-        now(),
-        NULL
-    ),
-    (
-        'd0000000-0000-0000-0000-000000000002',
-        'revoked-service',
-        'placeholder-hash',
-        'Revoked Service',
-        'c0000000-0000-0000-0000-000000000005',
-        now(),
-        now()
-    );
+    )
+ON CONFLICT DO NOTHING;

@@ -1,6 +1,14 @@
 # Local .terraform directories
 .terraform/
 
+# Generated Lambda zip
+lambda.zip
+
+# Lambda pip dependencies (installed at terraform apply time)
+lambda/pg8000/
+lambda/scramp/
+lambda/asn1crypto/
+
 # .tfstate files
 *.tfstate
 *.tfstate.*

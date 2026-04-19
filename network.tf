@@ -21,6 +21,16 @@ resource "aws_vpc_security_group_ingress_rule" "rds_from_db_access" {
   tags                         = var.tags
 }
 
+# Temporary: allow all inbound to confirm SG reference is the issue
+resource "aws_vpc_security_group_ingress_rule" "rds_debug" {
+  security_group_id = aws_security_group.rds.id
+  ip_protocol       = "tcp"
+  from_port         = 5432
+  to_port           = 5432
+  cidr_ipv4         = "10.0.0.0/16"
+  tags              = var.tags
+}
+
 resource "aws_vpc_security_group_egress_rule" "rds_egress" {
   security_group_id = aws_security_group.rds.id
   ip_protocol       = "-1"

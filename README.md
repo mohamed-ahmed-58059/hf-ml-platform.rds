@@ -1,5 +1,7 @@
 # hf-ml-platform.rds
 
+![CI](https://github.com/mohamed-ahmed-58059/hf-ml-platform.rds/actions/workflows/ci.yml/badge.svg)
+
 Terraform-managed RDS PostgreSQL 16 for the HuggingFace ML Inference Platform. Runs in private subnets with no public access. Credentials stored in Secrets Manager. Schema initialized via a Lambda function.
 
 ---

@@ -112,9 +112,11 @@ CREATE TABLE IF NOT EXISTS api_keys (
     name       VARCHAR(100) NOT NULL,
     status     VARCHAR(20)  NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'revoked')),
     created_at TIMESTAMPTZ  NOT NULL DEFAULT now(),
-    revoked_at TIMESTAMPTZ,
-    UNIQUE (user_id, name)
+    revoked_at TIMESTAMPTZ
 );
+
+CREATE UNIQUE INDEX IF NOT EXISTS api_keys_user_active_name_uniq
+    ON api_keys (user_id, name) WHERE status = 'active';
 
 
 -- Tiers (seed data)
